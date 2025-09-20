@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Motion Amplifier</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            color: #1f2937;
+        }
+        .container {
+            max-width: 900px;
+        }
+        .btn-primary {
+            background-color: #4f46e5;
+            color: white;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .btn-primary:hover {
+            background-color: #4338ca;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #4f46e5;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            background: #4f46e5;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        .video-container {
+            position: relative;
+            background-color: #111827;
+            border-radius: 0.75rem;
+            overflow: hidden;
+        }
+        .processing-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(17, 24, 39, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            color: white;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-8 flex items-center justify-center min-h-screen">
+    <div class="container mx-auto p-6 bg-white rounded-xl shadow-lg">
+        <h1 class="text-3xl font-bold text-center text-gray-800 mb-2">Video Motion Amplifier</h1>
+        <p class="text-center text-gray-500 mb-6">Amplify subtle movements in a video. Best results with a stationary camera and a stable subject.</p>
+
+        <div class="mb-6">
+            <label for="video-input" class="block text-sm font-medium text-gray-700 mb-2">Upload a Video File</label>
+            <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                <div class="space-y-1 text-center">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                        <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-8m32-12h12a4 4 0 014 4v4m0 0H8m8-4H8m8 4h-4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    <div class="flex text-sm text-gray-600">
+                        <label for="video-input" class="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500">
+                            <span>Upload a file</span>
+                            <input id="video-input" name="video-input" type="file" class="sr-only" accept="video/*">
+                        </label>
+                        <p class="pl-1">or drag and drop</p>
+                    </div>
+                    <p class="text-xs text-gray-500">MP4, WebM up to 100MB</p>
+                </div>
+            </div>
+            <p id="file-name" class="mt-2 text-sm text-gray-500 text-center"></p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
+            <div>
+                <label for="amp-factor" class="block text-sm font-medium text-gray-700">Amplification Factor: <span id="amp-factor-value">50</span>x</label>
+                <input type="range" id="amp-factor" min="1" max="200" value="50" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-2">
+            </div>
+            <div>
+                <label for="freq-low" class="block text-sm font-medium text-gray-700">Frequency Range (Hz)</label>
+                <div class="flex items-center space-x-2 mt-2">
+                    <input type="number" id="freq-low" value="0.1" step="0.1" min="0" class="w-1/2 p-2 border border-gray-300 rounded-lg text-sm">
+                    <span class="text-gray-500 text-sm">to</span>
+                    <input type="number" id="freq-high" value="10" step="0.1" min="0.1" class="w-1/2 p-2 border border-gray-300 rounded-lg text-sm">
+                </div>
+            </div>
+        </div>
+
+        <div class="flex justify-center mb-6">
+            <button id="process-btn" class="btn-primary w-full sm:w-auto px-6 py-3 rounded-xl font-semibold text-lg opacity-50 cursor-not-allowed" disabled>
+                Process Video
+            </button>
+        </div>
+
+        <div id="video-players" class="grid grid-cols-1 sm:grid-cols-2 gap-6 hidden">
+            <div class="video-container">
+                <h3 class="absolute top-4 left-4 text-white font-semibold z-10">Original Video</h3>
+                <video id="original-video" class="w-full h-full" controls loop></video>
+            </div>
+            <div class="video-container">
+                <div id="processing-overlay" class="processing-overlay hidden">
+                    <svg class="animate-spin h-10 w-10 text-white mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <p class="text-lg font-medium">Processing...</p>
+                </div>
+                <h3 class="absolute top-4 left-4 text-white font-semibold z-10">Amplified Video</h3>
+                <video id="amplified-video" class="w-full h-full" controls loop></video>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const videoInput = document.getElementById('video-input');
+            const fileNameSpan = document.getElementById('file-name');
+            const ampFactorInput = document.getElementById('amp-factor');
+            const ampFactorValueSpan = document.getElementById('amp-factor-value');
+            const freqLowInput = document.getElementById('freq-low');
+            const freqHighInput = document.getElementById('freq-high');
+            const processBtn = document.getElementById('process-btn');
+            const videoPlayersContainer = document.getElementById('video-players');
+            const originalVideoPlayer = document.getElementById('original-video');
+            const amplifiedVideoPlayer = document.getElementById('amplified-video');
+            const processingOverlay = document.getElementById('processing-overlay');
+
+            let uploadedFile = null;
+
+            // Update amplification factor value on slider change
+            ampFactorInput.addEventListener('input', () => {
+                ampFactorValueSpan.textContent = ampFactorInput.value;
+            });
+
+            // Handle file selection
+            videoInput.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (file) {
+                    uploadedFile = file;
+                    fileNameSpan.textContent = `File selected: ${file.name}`;
+                    processBtn.disabled = false;
+                    processBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    
+                    const videoURL = URL.createObjectURL(file);
+                    originalVideoPlayer.src = videoURL;
+                    videoPlayersContainer.classList.add('hidden');
+                } else {
+                    uploadedFile = null;
+                    fileNameSpan.textContent = '';
+                    processBtn.disabled = true;
+                    processBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                }
+            });
+
+            // Handle drag-and-drop
+            const dropArea = document.querySelector('.mt-1');
+            dropArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropArea.classList.add('border-indigo-500');
+            });
+            dropArea.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                dropArea.classList.remove('border-indigo-500');
+            });
+            dropArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropArea.classList.remove('border-indigo-500');
+                const file = e.dataTransfer.files[0];
+                if (file && file.type.startsWith('video/')) {
+                    videoInput.files = e.dataTransfer.files;
+                    videoInput.dispatchEvent(new Event('change'));
+                }
+            });
+
+            // Handle video processing
+            processBtn.addEventListener('click', async () => {
+                if (!uploadedFile) return;
+
+                // Show processing overlay
+                processingOverlay.classList.remove('hidden');
+                videoPlayersContainer.classList.remove('hidden');
+                amplifiedVideoPlayer.src = '';
+
+                const ampFactor = parseFloat(ampFactorInput.value);
+                const freqLow = parseFloat(freqLowInput.value);
+                const freqHigh = parseFloat(freqHighInput.value);
+
+                // Read video frames using a temporary video element
+                const tempVideo = document.createElement('video');
+                tempVideo.src = URL.createObjectURL(uploadedFile);
+                tempVideo.preload = 'metadata';
+
+                tempVideo.onloadedmetadata = async () => {
+                    const videoWidth = tempVideo.videoWidth;
+                    const videoHeight = tempVideo.videoHeight;
+                    const duration = tempVideo.duration;
+                    const fps = 30; // Assuming a standard frame rate
+                    const numFrames = Math.floor(duration * fps);
+
+                    const canvas = document.createElement('canvas');
+                    canvas.width = videoWidth;
+                    canvas.height = videoHeight;
+                    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+                    const frames = [];
+                    for (let i = 0; i < numFrames; i++) {
+                        tempVideo.currentTime = (i / fps);
+                        await new Promise(resolve => tempVideo.onseeked = resolve);
+                        ctx.drawImage(tempVideo, 0, 0, videoWidth, videoHeight);
+                        const imageData = ctx.getImageData(0, 0, videoWidth, videoHeight);
+                        frames.push(imageData.data);
+                    }
+
+                    // --- Simplified Motion Amplification Algorithm (Conceptual) ---
+                    // This is a placeholder for a true implementation.
+                    // A real-world algorithm would be highly complex, using Fourier Transforms and filtering.
+                    const amplifiedFrames = [];
+                    for (let i = 0; i < frames.length; i++) {
+                        const originalFrame = frames[i];
+                        const amplifiedFrame = new Uint8ClampedArray(originalFrame);
+                        
+                        // Simple amplification: compare with a delayed frame
+                        const prevFrame = frames[Math.max(0, i - 1)];
+                        
+                        if (prevFrame) {
+                            for (let j = 0; j < originalFrame.length; j += 4) {
+                                // Calculate color difference (motion)
+                                const deltaR = originalFrame[j] - prevFrame[j];
+                                const deltaG = originalFrame[j + 1] - prevFrame[j + 1];
+                                const deltaB = originalFrame[j + 2] - prevFrame[j + 2];
+                                
+                                // Amplify the difference and add back to the original pixel
+                                amplifiedFrame[j] = Math.min(255, Math.max(0, originalFrame[j] + deltaR * ampFactor));
+                                amplifiedFrame[j + 1] = Math.min(255, Math.max(0, originalFrame[j + 1] + deltaG * ampFactor));
+                                amplifiedFrame[j + 2] = Math.min(255, Math.max(0, originalFrame[j + 2] + deltaB * ampFactor));
+                            }
+                        }
+                        amplifiedFrames.push(amplifiedFrame);
+                    }
+                    
+                    // Generate new video from amplified frames
+                    const stream = new MediaStream();
+                    const videoTrack = canvas.captureStream(fps).getVideoTracks()[0];
+                    stream.addTrack(videoTrack);
+
+                    const mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+                    const chunks = [];
+                    mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
+                    
+                    mediaRecorder.onstop = () => {
+                        const blob = new Blob(chunks, { type: 'video/webm' });
+                        amplifiedVideoPlayer.src = URL.createObjectURL(blob);
+                        amplifiedVideoPlayer.play();
+                        originalVideoPlayer.play();
+                        processingOverlay.classList.add('hidden');
+                    };
+
+                    mediaRecorder.start();
+                    setTimeout(() => mediaRecorder.stop(), duration * 1000);
+                };
+            });
+        });
+    </script>
+</body>
+</html>
