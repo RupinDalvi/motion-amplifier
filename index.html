@@ -728,6 +728,11 @@
                     const stream = canvas.captureStream(fps);
                     console.log('Canvas stream created successfully');
                     
+                    // Check if MediaRecorder is supported
+                    if (typeof MediaRecorder === 'undefined') {
+                        throw new Error('MediaRecorder is not supported in this browser. Please use a modern browser like Chrome, Firefox, or Edge.');
+                    }
+                    
                     // Try different codec options for better browser compatibility
                     let mediaRecorderOptions;
                     if (MediaRecorder.isTypeSupported('video/webm; codecs=vp8')) {
@@ -735,13 +740,16 @@
                             mimeType: 'video/webm; codecs=vp8',
                             videoBitsPerSecond: 2500000 
                         };
+                        console.log('Using VP8 codec');
                     } else if (MediaRecorder.isTypeSupported('video/webm')) {
                         mediaRecorderOptions = { 
                             mimeType: 'video/webm',
                             videoBitsPerSecond: 2500000 
                         };
+                        console.log('Using WebM codec');
                     } else {
                         mediaRecorderOptions = { videoBitsPerSecond: 2500000 };
+                        console.log('Using default codec');
                     }
                     
                     const mediaRecorder = new MediaRecorder(stream, mediaRecorderOptions);
