@@ -589,6 +589,7 @@
             processBtn.addEventListener('click', async () => {
                 if (!uploadedFile) return;
 
+                console.log('Starting video processing...');
                 try {
                     processingOverlay.classList.remove('hidden');
                     videoPlayersContainer.classList.remove('hidden');
@@ -645,9 +646,25 @@
                         try {
                             tempVideo.currentTime = (i / fps);
                             await new Promise((resolve, reject) => {
-                                tempVideo.onseeked = resolve;
-                                tempVideo.onerror = reject;
-                                setTimeout(reject, 5000); // 5 second timeout
+                                const timeoutId = setTimeout(() => {
+                                    tempVideo.onseeked = null;
+                                    tempVideo.onerror = null;
+                                    reject(new Error(`Frame ${i} seek timeout`));
+                                }, 5000); // 5 second timeout
+                                
+                                tempVideo.onseeked = () => {
+                                    clearTimeout(timeoutId);
+                                    tempVideo.onseeked = null;
+                                    tempVideo.onerror = null;
+                                    resolve();
+                                };
+                                
+                                tempVideo.onerror = (e) => {
+                                    clearTimeout(timeoutId);
+                                    tempVideo.onseeked = null;
+                                    tempVideo.onerror = null;
+                                    reject(e);
+                                };
                             });
                             
                             ctx.drawImage(tempVideo, 0, 0, videoWidth, videoHeight);
@@ -660,6 +677,10 @@
                             progressBar.style.width = `${(i / maxFrames) * 30}%`;
                         } catch (error) {
                             console.warn(`Error processing frame ${i}:`, error);
+                            // Stop processing if we hit too many consecutive failures
+                            if (i > 0 && framesData.length === 0) {
+                                throw new Error('Failed to extract any video frames. The video file may be corrupted or in an unsupported format.');
+                            }
                             break;
                         }
                     }
@@ -702,49 +723,145 @@
                     }
 
                     // --- Generate new video from amplified frames ---
+                    console.log('Starting video generation with', amplifiedFramesData.length, 'frames at', fps, 'fps');
                     processingText.textContent = 'Generating output video...';
                     const stream = canvas.captureStream(fps);
-                    const mediaRecorder = new MediaRecorder(stream, { 
-                        mimeType: 'video/webm; codecs=vp8',
-                        videoBitsPerSecond: 2500000 // 2.5 Mbps for better quality
-                    });
+                    console.log('Canvas stream created successfully');
+                    
+                    // Check if MediaRecorder is supported
+                    if (typeof MediaRecorder === 'undefined') {
+                        throw new Error('MediaRecorder is not supported in this browser. Please use a modern browser like Chrome, Firefox, or Edge.');
+                    }
+                    
+                    // Try different codec options for better browser compatibility
+                    let mediaRecorderOptions;
+                    if (MediaRecorder.isTypeSupported('video/webm; codecs=vp8')) {
+                        mediaRecorderOptions = { 
+                            mimeType: 'video/webm; codecs=vp8',
+                            videoBitsPerSecond: 2500000 
+                        };
+                        console.log('Using VP8 codec');
+                    } else if (MediaRecorder.isTypeSupported('video/webm')) {
+                        mediaRecorderOptions = { 
+                            mimeType: 'video/webm',
+                            videoBitsPerSecond: 2500000 
+                        };
+                        console.log('Using WebM codec');
+                    } else {
+                        mediaRecorderOptions = { videoBitsPerSecond: 2500000 };
+                        console.log('Using default codec');
+                    }
+                    
+                    const mediaRecorder = new MediaRecorder(stream, mediaRecorderOptions);
                     const chunks = [];
+                    let isRecordingComplete = false;
+                    let recordingTimeoutId;
+                    
+                    // Add timeout mechanism to prevent hanging
+                    const recordingTimeout = 60000; // 60 seconds timeout
+                    const startTimeout = () => {
+                        recordingTimeoutId = setTimeout(() => {
+                            if (!isRecordingComplete) {
+                                console.warn('MediaRecorder timeout - stopping recording');
+                                try {
+                                    mediaRecorder.stop();
+                                } catch (e) {
+                                    console.error('Error stopping MediaRecorder:', e);
+                                }
+                                cleanup();
+                                throw new Error('Video generation timed out. Please try with a shorter video or lower amplification factor.');
+                            }
+                        }, recordingTimeout);
+                    };
+                    
+                    const cleanup = () => {
+                        isRecordingComplete = true;
+                        if (recordingTimeoutId) {
+                            clearTimeout(recordingTimeoutId);
+                        }
+                        // Clean up the stream
+                        if (stream) {
+                            stream.getTracks().forEach(track => track.stop());
+                        }
+                    };
                     
                     mediaRecorder.ondataavailable = (e) => {
                         if (e.data.size > 0) chunks.push(e.data);
                     };
                     
                     mediaRecorder.onstop = () => {
-                        const blob = new Blob(chunks, { type: 'video/webm' });
-                        amplifiedVideoPlayer.src = URL.createObjectURL(blob);
-                        processingOverlay.classList.add('hidden');
-                        
-                        // Auto-play both videos for comparison
-                        setTimeout(() => {
-                            originalVideoPlayer.currentTime = 0;
-                            amplifiedVideoPlayer.currentTime = 0;
-                            originalVideoPlayer.play();
-                            amplifiedVideoPlayer.play();
-                        }, 500);
+                        cleanup();
+                        try {
+                            const blob = new Blob(chunks, { type: mediaRecorder.mimeType || 'video/webm' });
+                            amplifiedVideoPlayer.src = URL.createObjectURL(blob);
+                            processingOverlay.classList.add('hidden');
+                            
+                            // Auto-play both videos for comparison
+                            setTimeout(() => {
+                                originalVideoPlayer.currentTime = 0;
+                                amplifiedVideoPlayer.currentTime = 0;
+                                originalVideoPlayer.play();
+                                amplifiedVideoPlayer.play();
+                            }, 500);
+                        } catch (error) {
+                            console.error('Error creating video blob:', error);
+                            throw new Error('Failed to create output video. Please try again.');
+                        }
                     };
                     
-                    mediaRecorder.start();
+                    mediaRecorder.onerror = (event) => {
+                        cleanup();
+                        console.error('MediaRecorder error:', event);
+                        throw new Error('Video recording failed. Your browser may not support video recording or the file is too large.');
+                    };
+                    
+                    try {
+                        console.log('Starting MediaRecorder with options:', mediaRecorderOptions);
+                        mediaRecorder.start();
+                        console.log('MediaRecorder started successfully');
+                        startTimeout();
+                    } catch (error) {
+                        cleanup();
+                        throw new Error('Failed to start video recording. Please try with a different browser or smaller video file.');
+                    }
 
                     let frameIndex = 0;
                     const frameInterval = 1000 / fps;
                     
                     function drawNextFrame() {
+                        if (isRecordingComplete) {
+                            console.log('Recording was interrupted, stopping drawNextFrame');
+                            return; // Stop if recording was interrupted
+                        }
+                        
                         if (frameIndex < amplifiedFramesData.length) {
-                            const frameData = amplifiedFramesData[frameIndex];
-                            const imageData = new ImageData(frameData, videoWidth, videoHeight);
-                            ctx.putImageData(imageData, 0, 0);
-                            frameIndex++;
-                            
-                            progressBar.style.width = `${80 + (frameIndex / amplifiedFramesData.length) * 20}%`;
-                            
-                            setTimeout(drawNextFrame, frameInterval);
+                            try {
+                                const frameData = amplifiedFramesData[frameIndex];
+                                const imageData = new ImageData(frameData, videoWidth, videoHeight);
+                                ctx.putImageData(imageData, 0, 0);
+                                frameIndex++;
+                                
+                                if (frameIndex % 10 === 0) {
+                                    console.log(`Drawing frame ${frameIndex}/${amplifiedFramesData.length}`);
+                                }
+                                
+                                progressBar.style.width = `${80 + (frameIndex / amplifiedFramesData.length) * 20}%`;
+                                
+                                setTimeout(drawNextFrame, frameInterval);
+                            } catch (error) {
+                                console.error('Error drawing frame:', error);
+                                cleanup();
+                                throw new Error('Error processing video frames. Please try again.');
+                            }
                         } else {
-                            mediaRecorder.stop();
+                            console.log('All frames drawn, stopping MediaRecorder');
+                            try {
+                                mediaRecorder.stop();
+                            } catch (error) {
+                                cleanup();
+                                console.error('Error stopping MediaRecorder:', error);
+                                throw new Error('Error finalizing video. Please try again.');
+                            }
                         }
                     }
                     
