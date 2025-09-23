@@ -4,27 +4,145 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Video Motion Amplifier</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        /* Fallback styles for when external resources are blocked */
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             background-color: #f3f4f6;
             color: #1f2937;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
         }
+        
+        /* Basic Tailwind-like utility classes */
         .container {
             max-width: 900px;
+            margin: 0 auto;
         }
+        
+        .p-4 { padding: 1rem; }
+        .p-6 { padding: 1.5rem; }
+        .p-8 { padding: 2rem; }
+        .px-6 { padding-left: 1.5rem; padding-right: 1.5rem; }
+        .py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+        .pt-5 { padding-top: 1.25rem; }
+        .pb-6 { padding-bottom: 1.5rem; }
+        .mt-1 { margin-top: 0.25rem; }
+        .mt-2 { margin-top: 0.5rem; }
+        .mb-2 { margin-bottom: 0.5rem; }
+        .mb-4 { margin-bottom: 1rem; }
+        .mb-6 { margin-bottom: 1.5rem; }
+        .mx-auto { margin-left: auto; margin-right: auto; }
+        
+        .bg-white { background-color: white; }
+        .bg-gray-200 { background-color: #e5e7eb; }
+        .border-gray-300 { border-color: #d1d5db; }
+        .border-indigo-500 { border-color: #6366f1; }
+        .bg-indigo-50 { background-color: #eef2ff; }
+        .text-gray-500 { color: #6b7280; }
+        .text-gray-600 { color: #4b5563; }
+        .text-gray-700 { color: #374151; }
+        .text-gray-800 { color: #1f2937; }
+        .text-indigo-600 { color: #4f46e5; }
+        .text-white { color: white; }
+        
+        .rounded-md { border-radius: 0.375rem; }
+        .rounded-lg { border-radius: 0.5rem; }
+        .rounded-xl { border-radius: 0.75rem; }
+        .shadow-lg { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
+        
+        .grid { display: grid; }
+        .grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+        .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .gap-6 { gap: 1.5rem; }
+        
+        .flex { display: flex; }
+        .items-center { align-items: center; }
+        .justify-center { justify-content: center; }
+        .space-x-2 > * + * { margin-left: 0.5rem; }
+        .space-y-1 > * + * { margin-top: 0.25rem; }
+        
+        .text-center { text-align: center; }
+        .text-sm { font-size: 0.875rem; }
+        .text-xs { font-size: 0.75rem; }
+        .text-lg { font-size: 1.125rem; }
+        .text-3xl { font-size: 1.875rem; }
+        .font-medium { font-weight: 500; }
+        .font-semibold { font-weight: 600; }
+        .font-bold { font-weight: 700; }
+        
+        .w-full { width: 100%; }
+        .w-1/2 { width: 50%; }
+        .h-2 { height: 0.5rem; }
+        .h-12 { height: 3rem; }
+        .w-12 { width: 3rem; }
+        .h-10 { height: 2.5rem; }
+        .w-10 { width: 2.5rem; }
+        
+        .border { border-width: 1px; }
+        .border-2 { border-width: 2px; }
+        .border-dashed { border-style: dashed; }
+        
+        .hidden { display: none; }
+        .block { display: block; }
+        .cursor-pointer { cursor: pointer; }
+        .cursor-not-allowed { cursor: not-allowed; }
+        .opacity-50 { opacity: 0.5; }
+        .opacity-25 { opacity: 0.25; }
+        .opacity-75 { opacity: 0.75; }
+        
+        .min-h-screen { min-height: 100vh; }
+        .appearance-none { appearance: none; }
+        .sr-only { 
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+        
+        @media (min-width: 640px) {
+            .sm\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .sm\:w-auto { width: auto; }
+            .sm\:p-8 { padding: 2rem; }
+        }
+        
         .btn-primary {
             background-color: #4f46e5;
             color: white;
             transition: transform 0.2s, box-shadow 0.2s;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            font-size: 1.125rem;
         }
-        .btn-primary:hover {
+        .btn-primary:hover:not(:disabled) {
             background-color: #4338ca;
             transform: translateY(-2px);
             box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 0.5rem;
+            background: #e5e7eb;
+            border-radius: 0.5rem;
+            appearance: none;
+            cursor: pointer;
+            margin-top: 0.5rem;
         }
         input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
@@ -42,6 +160,15 @@
             border-radius: 50%;
             cursor: pointer;
         }
+        
+        input[type="number"] {
+            width: 50%;
+            padding: 0.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+        }
+        
         .video-container {
             position: relative;
             background-color: #111827;
@@ -77,6 +204,88 @@
             background-color: #4f46e5;
             transition: width 0.1s ease-in-out;
         }
+        
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        
+        h1 {
+            font-size: 1.875rem;
+            font-weight: 700;
+            text-align: center;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+        
+        h3 {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            color: white;
+            font-weight: 600;
+            z-index: 10;
+        }
+        
+        video {
+            width: 100%;
+            height: 100%;
+        }
+        
+        label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #374151;
+        }
+        
+        .upload-area {
+            margin-top: 0.25rem;
+            display: flex;
+            justify-content: center;
+            padding: 1.25rem 1.5rem 1.5rem;
+            border: 2px dashed #d1d5db;
+            border-radius: 0.375rem;
+            transition: border-color 0.2s, background-color 0.2s;
+        }
+        
+        .upload-area:hover {
+            border-color: #6366f1;
+        }
+        
+        .upload-content {
+            color: #4b5563;
+            font-size: 0.875rem;
+            text-align: center;
+        }
+        
+        .upload-icon {
+            margin: 0 auto 0.75rem;
+            height: 3rem;
+            width: 3rem;
+            color: #9ca3af;
+        }
+        
+        .file-input-label {
+            position: relative;
+            cursor: pointer;
+            background-color: white;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            color: #4f46e5;
+        }
+        
+        .file-input-label:hover {
+            color: #4338ca;
+        }
     </style>
 </head>
 <body class="p-4 sm:p-8 flex items-center justify-center min-h-screen">
@@ -86,19 +295,19 @@
 
         <div class="mb-6">
             <label for="video-input" class="block text-sm font-medium text-gray-700 mb-2">Upload a Video File</label>
-            <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
-                <div class="space-y-1 text-center">
-                    <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+            <div class="upload-area">
+                <div class="upload-content">
+                    <svg class="upload-icon" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
                         <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-8m32-12h12a4 4 0 014 4v4m0 0H8m8-4H8m8 4h-4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                     </svg>
                     <div class="flex text-sm text-gray-600">
-                        <label for="video-input" class="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500">
+                        <label for="video-input" class="file-input-label">
                             <span>Upload a file</span>
                             <input id="video-input" name="video-input" type="file" class="sr-only" accept="video/*">
                         </label>
-                        <p class="pl-1">or drag and drop</p>
+                        <p style="padding-left: 0.25rem;">or drag and drop</p>
                     </div>
-                    <p class="text-xs text-gray-500">MP4, WebM up to 100MB</p>
+                    <p class="text-xs text-gray-500" style="margin-top: 0.25rem;">MP4, WebM up to 100MB</p>
                 </div>
             </div>
             <p id="file-name" class="mt-2 text-sm text-gray-500 text-center"></p>
@@ -106,16 +315,18 @@
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
             <div>
-                <label for="amp-factor" class="block text-sm font-medium text-gray-700">Amplification Factor: <span id="amp-factor-value">50</span>x</label>
-                <input type="range" id="amp-factor" min="1" max="200" value="50" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-2">
+                <label for="amp-factor" class="block text-sm font-medium text-gray-700">Amplification Factor: <span id="amp-factor-value">15</span>x</label>
+                <input type="range" id="amp-factor" min="5" max="100" value="15" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-2">
+                <p class="text-xs text-gray-500 mt-1">Higher values amplify motion more but may introduce artifacts</p>
             </div>
             <div>
                 <label for="freq-low" class="block text-sm font-medium text-gray-700">Frequency Range (Hz)</label>
                 <div class="flex items-center space-x-2 mt-2">
-                    <input type="number" id="freq-low" value="0.1" step="0.1" min="0" class="w-1/2 p-2 border border-gray-300 rounded-lg text-sm">
+                    <input type="number" id="freq-low" value="0.4" step="0.1" min="0.1" max="10" class="w-1/2 p-2 border border-gray-300 rounded-lg text-sm">
                     <span class="text-gray-500 text-sm">to</span>
-                    <input type="number" id="freq-high" value="10" step="0.1" min="0.1" class="w-1/2 p-2 border border-gray-300 rounded-lg text-sm">
+                    <input type="number" id="freq-high" value="3.0" step="0.1" min="0.2" max="20" class="w-1/2 p-2 border border-gray-300 rounded-lg text-sm">
                 </div>
+                <p class="text-xs text-gray-500 mt-1">Typical range: 0.4-3Hz for breathing, 0.8-5Hz for pulse</p>
             </div>
         </div>
 
@@ -136,7 +347,7 @@
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    <p class="text-lg font-medium">Processing...</p>
+                    <p id="processing-text" class="text-lg font-medium">Processing...</p>
                     <div id="progress-bar-container">
                         <div id="progress-bar"></div>
                     </div>
@@ -161,6 +372,7 @@
             const amplifiedVideoPlayer = document.getElementById('amplified-video');
             const processingOverlay = document.getElementById('processing-overlay');
             const progressBar = document.getElementById('progress-bar');
+            const processingText = document.getElementById('processing-text');
             
             let uploadedFile = null;
 
@@ -169,12 +381,45 @@
                 ampFactorValueSpan.textContent = ampFactorInput.value;
             });
 
-            // Handle file selection
+            // Validate frequency inputs
+            freqLowInput.addEventListener('change', () => {
+                const low = parseFloat(freqLowInput.value);
+                const high = parseFloat(freqHighInput.value);
+                if (low >= high) {
+                    freqLowInput.value = (high - 0.1).toFixed(1);
+                }
+            });
+
+            freqHighInput.addEventListener('change', () => {
+                const low = parseFloat(freqLowInput.value);
+                const high = parseFloat(freqHighInput.value);
+                if (high <= low) {
+                    freqHighInput.value = (low + 0.1).toFixed(1);
+                }
+            });
+
+            // Handle file selection with validation
             videoInput.addEventListener('change', (event) => {
                 const file = event.target.files[0];
                 if (file) {
+                    // Validate file type
+                    if (!file.type.startsWith('video/')) {
+                        alert('Please select a valid video file');
+                        event.target.value = '';
+                        return;
+                    }
+                    
+                    // Validate file size (100MB limit)
+                    const maxSize = 100 * 1024 * 1024; // 100MB
+                    if (file.size > maxSize) {
+                        alert('File size must be less than 100MB');
+                        event.target.value = '';
+                        return;
+                    }
+                    
                     uploadedFile = file;
-                    fileNameSpan.textContent = `File selected: ${file.name}`;
+                    const sizeStr = (file.size / (1024 * 1024)).toFixed(1);
+                    fileNameSpan.textContent = `File selected: ${file.name} (${sizeStr}MB)`;
                     processBtn.disabled = false;
                     processBtn.classList.remove('opacity-50', 'cursor-not-allowed');
                     
@@ -189,125 +434,327 @@
                 }
             });
 
-            // Handle drag-and-drop
-            const dropArea = document.querySelector('.mt-1');
-            dropArea.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                dropArea.classList.add('border-indigo-500');
+            // Handle drag-and-drop with better validation
+            const dropArea = document.querySelector('.upload-area');
+            
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, preventDefaults, false);
             });
-            dropArea.addEventListener('dragleave', (e) => {
+            
+            function preventDefaults(e) {
                 e.preventDefault();
-                dropArea.classList.remove('border-indigo-500');
+                e.stopPropagation();
+            }
+            
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropArea.addEventListener(eventName, highlight, false);
             });
-            dropArea.addEventListener('drop', (e) => {
-                e.preventDefault();
-                dropArea.classList.remove('border-indigo-500');
-                const file = e.dataTransfer.files[0];
-                if (file && file.type.startsWith('video/')) {
-                    videoInput.files = e.dataTransfer.files;
-                    videoInput.dispatchEvent(new Event('change'));
+            
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, unhighlight, false);
+            });
+            
+            function highlight(e) {
+                dropArea.classList.add('border-indigo-500', 'bg-indigo-50');
+            }
+            
+            function unhighlight(e) {
+                dropArea.classList.remove('border-indigo-500', 'bg-indigo-50');
+            }
+            
+            dropArea.addEventListener('drop', handleDrop, false);
+            
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                
+                if (files.length > 0) {
+                    const file = files[0];
+                    if (file.type.startsWith('video/')) {
+                        videoInput.files = files;
+                        videoInput.dispatchEvent(new Event('change'));
+                    } else {
+                        alert('Please drop a valid video file');
+                    }
                 }
-            });
+            }
 
-            // --- Main processing function ---
+            // Utility functions for improved motion amplification
+            function createGaussianKernel(sigma) {
+                const size = Math.ceil(sigma * 3) * 2 + 1;
+                const kernel = [];
+                const center = Math.floor(size / 2);
+                let sum = 0;
+                
+                for (let i = 0; i < size; i++) {
+                    const x = i - center;
+                    const value = Math.exp(-(x * x) / (2 * sigma * sigma));
+                    kernel.push(value);
+                    sum += value;
+                }
+                
+                // Normalize kernel
+                return kernel.map(v => v / sum);
+            }
+
+            function applyGaussianBlur(imageData, sigma) {
+                if (sigma <= 0) return imageData;
+                
+                const width = imageData.width;
+                const height = imageData.height;
+                const data = new Uint8ClampedArray(imageData.data);
+                const kernel = createGaussianKernel(sigma);
+                const kernelSize = kernel.length;
+                const radius = Math.floor(kernelSize / 2);
+                
+                // Horizontal pass
+                for (let y = 0; y < height; y++) {
+                    for (let x = 0; x < width; x++) {
+                        for (let c = 0; c < 3; c++) { // RGB channels only
+                            let sum = 0;
+                            for (let k = 0; k < kernelSize; k++) {
+                                const srcX = Math.min(Math.max(x + k - radius, 0), width - 1);
+                                const srcIndex = (y * width + srcX) * 4 + c;
+                                sum += imageData.data[srcIndex] * kernel[k];
+                            }
+                            const destIndex = (y * width + x) * 4 + c;
+                            data[destIndex] = Math.round(sum);
+                        }
+                        data[(y * width + x) * 4 + 3] = imageData.data[(y * width + x) * 4 + 3]; // Alpha
+                    }
+                }
+                
+                // Vertical pass
+                const tempData = new Uint8ClampedArray(data);
+                for (let y = 0; y < height; y++) {
+                    for (let x = 0; x < width; x++) {
+                        for (let c = 0; c < 3; c++) { // RGB channels only
+                            let sum = 0;
+                            for (let k = 0; k < kernelSize; k++) {
+                                const srcY = Math.min(Math.max(y + k - radius, 0), height - 1);
+                                const srcIndex = (srcY * width + x) * 4 + c;
+                                sum += tempData[srcIndex] * kernel[k];
+                            }
+                            const destIndex = (y * width + x) * 4 + c;
+                            data[destIndex] = Math.round(sum);
+                        }
+                    }
+                }
+                
+                return new ImageData(data, width, height);
+            }
+
+            function temporalFilter(frames, freqLow, freqHigh, fps) {
+                // Simple temporal bandpass filter using frame differencing
+                const filtered = [];
+                const alpha = 1.0 - Math.exp(-2 * Math.PI * freqLow / fps);
+                const beta = Math.exp(-2 * Math.PI * freqHigh / fps);
+                
+                for (let i = 0; i < frames.length; i++) {
+                    const current = frames[i];
+                    const filtered_frame = new Uint8ClampedArray(current.length);
+                    
+                    if (i === 0) {
+                        // First frame - no filtering
+                        filtered_frame.set(current);
+                    } else {
+                        const prev = frames[i - 1];
+                        const prevFiltered = filtered[i - 1];
+                        
+                        for (let j = 0; j < current.length; j += 4) {
+                            // Apply temporal filtering on each RGB channel
+                            for (let c = 0; c < 3; c++) {
+                                const currVal = current[j + c];
+                                const prevVal = prev[j + c];
+                                const prevFilteredVal = prevFiltered[j + c];
+                                
+                                // High-pass filter (removes low frequencies)
+                                const highpass = currVal - alpha * prevVal - (1 - alpha) * prevFilteredVal;
+                                
+                                // Low-pass filter (removes high frequencies)
+                                const lowpass = beta * prevFilteredVal + (1 - beta) * highpass;
+                                
+                                filtered_frame[j + c] = Math.min(255, Math.max(0, lowpass + 128)); // Offset to avoid negative values
+                            }
+                            filtered_frame[j + 3] = current[j + 3]; // Alpha channel
+                        }
+                    }
+                    filtered.push(filtered_frame);
+                }
+                
+                return filtered;
+            }
+
+            // --- Enhanced Main processing function ---
             processBtn.addEventListener('click', async () => {
                 if (!uploadedFile) return;
 
-                processingOverlay.classList.remove('hidden');
-                videoPlayersContainer.classList.remove('hidden');
-                progressBar.style.width = '0%';
-                amplifiedVideoPlayer.src = '';
+                try {
+                    processingOverlay.classList.remove('hidden');
+                    videoPlayersContainer.classList.remove('hidden');
+                    progressBar.style.width = '0%';
+                    amplifiedVideoPlayer.src = '';
+                    processingText.textContent = 'Initializing...';
 
-                const ampFactor = parseFloat(ampFactorInput.value);
-                // Frequency range is not used in this simplified algorithm, but kept for UI
-                const freqLow = parseFloat(freqLowInput.value);
-                const freqHigh = parseFloat(freqHighInput.value);
+                    const ampFactor = parseFloat(ampFactorInput.value) / 10; // Reduce default amplification for better results
+                    const freqLow = parseFloat(freqLowInput.value);
+                    const freqHigh = parseFloat(freqHighInput.value);
 
-                const tempVideo = document.createElement('video');
-                tempVideo.src = URL.createObjectURL(uploadedFile);
-                tempVideo.preload = 'metadata';
+                    // Validate frequency range
+                    if (freqLow >= freqHigh) {
+                        alert('Low frequency must be less than high frequency');
+                        processingOverlay.classList.add('hidden');
+                        return;
+                    }
 
-                await new Promise(resolve => tempVideo.onloadedmetadata = resolve);
-                tempVideo.play();
-                
-                const videoWidth = tempVideo.videoWidth;
-                const videoHeight = tempVideo.videoHeight;
-                const duration = tempVideo.duration;
-                const fps = 30; // Assuming a standard frame rate
-                const numFrames = Math.floor(duration * fps);
+                    processingText.textContent = 'Loading video...';
+                    const tempVideo = document.createElement('video');
+                    tempVideo.src = URL.createObjectURL(uploadedFile);
+                    tempVideo.preload = 'metadata';
 
-                const canvas = document.createElement('canvas');
-                canvas.width = videoWidth;
-                canvas.height = videoHeight;
-                const ctx = canvas.getContext('2d');
-
-                const framesData = [];
-                for (let i = 0; i < numFrames; i++) {
-                    tempVideo.currentTime = (i / fps);
-                    await new Promise(resolve => tempVideo.onseeked = resolve);
-                    ctx.drawImage(tempVideo, 0, 0, videoWidth, videoHeight);
-                    const imageData = ctx.getImageData(0, 0, videoWidth, videoHeight);
-                    framesData.push(imageData.data);
-                    progressBar.style.width = `${(i / numFrames) * 50}%`;
-                }
-                
-                tempVideo.pause();
-                tempVideo.remove();
-
-                // --- Simplified Motion Amplification Algorithm ---
-                const amplifiedFramesData = [];
-                for (let i = 0; i < framesData.length; i++) {
-                    const originalFrame = framesData[i];
-                    const amplifiedFrame = new Uint8ClampedArray(originalFrame);
+                    await new Promise((resolve, reject) => {
+                        tempVideo.onloadedmetadata = resolve;
+                        tempVideo.onerror = reject;
+                    });
                     
-                    // Simple amplification: compare with a previous frame
-                    const prevFrame = framesData[Math.max(0, i - 1)];
+                    const videoWidth = tempVideo.videoWidth;
+                    const videoHeight = tempVideo.videoHeight;
+                    const duration = tempVideo.duration;
                     
-                    if (prevFrame) {
-                        for (let j = 0; j < originalFrame.length; j += 4) {
-                            const delta = originalFrame[j] - prevFrame[j]; // Using R channel for simplicity
-                            amplifiedFrame[j] = Math.min(255, Math.max(0, originalFrame[j] + delta * ampFactor));
-                            amplifiedFrame[j + 1] = Math.min(255, Math.max(0, originalFrame[j + 1] + delta * ampFactor));
-                            amplifiedFrame[j + 2] = Math.min(255, Math.max(0, originalFrame[j + 2] + delta * ampFactor));
+                    // Get actual frame rate or use 30fps as fallback
+                    let fps = 30;
+                    if (tempVideo.webkitVideoDecodedByteCount !== undefined) {
+                        // Try to estimate frame rate from video
+                        fps = Math.round(duration > 0 ? (tempVideo.webkitDecodedFrameCount || duration * 30) / duration : 30);
+                    }
+                    fps = Math.min(Math.max(fps, 15), 60); // Clamp between 15-60 fps
+
+                    // Limit processing for performance (max 10 seconds or 300 frames)
+                    const maxFrames = Math.min(Math.floor(duration * fps), 300);
+                    const processingDuration = Math.min(duration, maxFrames / fps);
+                    
+                    const canvas = document.createElement('canvas');
+                    canvas.width = videoWidth;
+                    canvas.height = videoHeight;
+                    const ctx = canvas.getContext('2d');
+
+                    // Extract frames with better error handling
+                    processingText.textContent = 'Extracting frames...';
+                    const framesData = [];
+                    for (let i = 0; i < maxFrames; i++) {
+                        try {
+                            tempVideo.currentTime = (i / fps);
+                            await new Promise((resolve, reject) => {
+                                tempVideo.onseeked = resolve;
+                                tempVideo.onerror = reject;
+                                setTimeout(reject, 5000); // 5 second timeout
+                            });
+                            
+                            ctx.drawImage(tempVideo, 0, 0, videoWidth, videoHeight);
+                            const imageData = ctx.getImageData(0, 0, videoWidth, videoHeight);
+                            
+                            // Apply spatial smoothing to reduce noise
+                            const smoothed = applyGaussianBlur(imageData, 1.0);
+                            framesData.push(smoothed.data);
+                            
+                            progressBar.style.width = `${(i / maxFrames) * 30}%`;
+                        } catch (error) {
+                            console.warn(`Error processing frame ${i}:`, error);
+                            break;
                         }
                     }
-                    amplifiedFramesData.push(amplifiedFrame);
-                    progressBar.style.width = `${50 + (i / numFrames) * 50}%`;
-                }
+                    
+                    tempVideo.pause();
+                    tempVideo.remove();
 
-                // --- Generate new video from amplified frames ---
-                const stream = canvas.captureStream(fps);
-                const mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm; codecs=vp9' });
-                const chunks = [];
-                
-                mediaRecorder.ondataavailable = (e) => {
-                    if (e.data.size > 0) chunks.push(e.data);
-                };
-                
-                mediaRecorder.onstop = () => {
-                    const blob = new Blob(chunks, { type: 'video/webm' });
-                    amplifiedVideoPlayer.src = URL.createObjectURL(blob);
-                    amplifiedVideoPlayer.play();
-                    originalVideoPlayer.play();
-                    processingOverlay.classList.add('hidden');
-                };
-                
-                mediaRecorder.start();
-
-                let frameIndex = 0;
-                function drawNextFrame() {
-                    if (frameIndex < amplifiedFramesData.length) {
-                        const frameData = amplifiedFramesData[frameIndex];
-                        const imageData = new ImageData(frameData, videoWidth, videoHeight);
-                        ctx.putImageData(imageData, 0, 0);
-                        frameIndex++;
-                        requestAnimationFrame(drawNextFrame);
-                    } else {
-                        mediaRecorder.stop();
+                    if (framesData.length < 2) {
+                        throw new Error('Insufficient frames extracted for processing');
                     }
+
+                    // --- Enhanced Motion Amplification Algorithm ---
+                    
+                    // Step 1: Apply temporal filtering
+                    processingText.textContent = 'Applying temporal filtering...';
+                    const filteredFrames = temporalFilter(framesData, freqLow, freqHigh, fps);
+                    progressBar.style.width = '50%';
+
+                    // Step 2: Apply amplification with improved algorithm
+                    processingText.textContent = 'Amplifying motion...';
+                    const amplifiedFramesData = [];
+                    for (let i = 0; i < framesData.length; i++) {
+                        const originalFrame = framesData[i];
+                        const filteredFrame = filteredFrames[i];
+                        const amplifiedFrame = new Uint8ClampedArray(originalFrame);
+                        
+                        for (let j = 0; j < originalFrame.length; j += 4) {
+                            // Apply amplification to filtered signal and add back to original
+                            for (let c = 0; c < 3; c++) {
+                                const original = originalFrame[j + c];
+                                const filtered = filteredFrame[j + c] - 128; // Remove offset
+                                const amplified = original + (filtered * ampFactor);
+                                amplifiedFrame[j + c] = Math.min(255, Math.max(0, amplified));
+                            }
+                            amplifiedFrame[j + 3] = originalFrame[j + 3]; // Alpha channel
+                        }
+                        
+                        amplifiedFramesData.push(amplifiedFrame);
+                        progressBar.style.width = `${50 + (i / framesData.length) * 30}%`;
+                    }
+
+                    // --- Generate new video from amplified frames ---
+                    processingText.textContent = 'Generating output video...';
+                    const stream = canvas.captureStream(fps);
+                    const mediaRecorder = new MediaRecorder(stream, { 
+                        mimeType: 'video/webm; codecs=vp8',
+                        videoBitsPerSecond: 2500000 // 2.5 Mbps for better quality
+                    });
+                    const chunks = [];
+                    
+                    mediaRecorder.ondataavailable = (e) => {
+                        if (e.data.size > 0) chunks.push(e.data);
+                    };
+                    
+                    mediaRecorder.onstop = () => {
+                        const blob = new Blob(chunks, { type: 'video/webm' });
+                        amplifiedVideoPlayer.src = URL.createObjectURL(blob);
+                        processingOverlay.classList.add('hidden');
+                        
+                        // Auto-play both videos for comparison
+                        setTimeout(() => {
+                            originalVideoPlayer.currentTime = 0;
+                            amplifiedVideoPlayer.currentTime = 0;
+                            originalVideoPlayer.play();
+                            amplifiedVideoPlayer.play();
+                        }, 500);
+                    };
+                    
+                    mediaRecorder.start();
+
+                    let frameIndex = 0;
+                    const frameInterval = 1000 / fps;
+                    
+                    function drawNextFrame() {
+                        if (frameIndex < amplifiedFramesData.length) {
+                            const frameData = amplifiedFramesData[frameIndex];
+                            const imageData = new ImageData(frameData, videoWidth, videoHeight);
+                            ctx.putImageData(imageData, 0, 0);
+                            frameIndex++;
+                            
+                            progressBar.style.width = `${80 + (frameIndex / amplifiedFramesData.length) * 20}%`;
+                            
+                            setTimeout(drawNextFrame, frameInterval);
+                        } else {
+                            mediaRecorder.stop();
+                        }
+                    }
+                    
+                    drawNextFrame();
+                    
+                } catch (error) {
+                    console.error('Processing error:', error);
+                    alert(`Error processing video: ${error.message}`);
+                    processingOverlay.classList.add('hidden');
                 }
-                
-                drawNextFrame();
             });
         });
     </script>
