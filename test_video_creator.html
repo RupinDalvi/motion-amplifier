@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create Test Video</title>
+</head>
+<body>
+    <h1>Creating Test Video</h1>
+    <canvas id="canvas" width="320" height="240" style="border: 1px solid black;"></canvas>
+    <br><br>
+    <button onclick="createTestVideo()">Create Test Video</button>
+    <br><br>
+    <video id="preview" controls style="max-width: 100%;"></video>
+    <br><br>
+    <a id="downloadLink" style="display: none;">Download Test Video</a>
+
+    <script>
+        async function createTestVideo() {
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            const preview = document.getElementById('preview');
+            const downloadLink = document.getElementById('downloadLink');
+            
+            // Create a simple animation with a moving circle
+            const stream = canvas.captureStream(30);
+            const mediaRecorder = new MediaRecorder(stream, {
+                mimeType: 'video/webm'
+            });
+            
+            const chunks = [];
+            mediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0) chunks.push(e.data);
+            };
+            
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(chunks, { type: 'video/webm' });
+                const url = URL.createObjectURL(blob);
+                preview.src = url;
+                downloadLink.href = url;
+                downloadLink.download = 'test_video.webm';
+                downloadLink.textContent = 'Download Test Video';
+                downloadLink.style.display = 'block';
+            };
+            
+            mediaRecorder.start();
+            
+            // Animate for 3 seconds
+            let frame = 0;
+            const totalFrames = 90; // 3 seconds at 30fps
+            
+            function animate() {
+                // Clear canvas
+                ctx.fillStyle = '#f0f0f0';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw a moving circle with slight movement
+                const centerX = canvas.width / 2;
+                const centerY = canvas.height / 2;
+                const radius = 20;
+                
+                // Create subtle movement that can be amplified
+                const offsetX = Math.sin(frame * 0.1) * 2; // Very small movement
+                const offsetY = Math.cos(frame * 0.15) * 1.5;
+                
+                ctx.fillStyle = '#4299e1';
+                ctx.beginPath();
+                ctx.arc(centerX + offsetX, centerY + offsetY, radius, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                // Add some static elements
+                ctx.fillStyle = '#ed8936';
+                ctx.fillRect(10, 10, 30, 30);
+                
+                frame++;
+                
+                if (frame < totalFrames) {
+                    setTimeout(animate, 33); // ~30fps
+                } else {
+                    mediaRecorder.stop();
+                }
+            }
+            
+            animate();
+        }
+    </script>
+</body>
+</html>
